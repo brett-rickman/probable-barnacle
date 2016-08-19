@@ -2,6 +2,7 @@
 rem
 rem Get information about DNS zones on this server
 rem
+reg export "HKLM\Software\Microsoft\Windows NT\CurrentVersion\DNS Server\Zones" %COMPUTERNAME%_dns.reg
 del c:\windows\system32\dns\db.*
 dnscmd /enumzones > %COMPUTERNAME%_zonelist.txt
 for /F %%Z in ('dnscmd /enumzones /primary /secondary') DO dnscmd /ZoneExport %%Z db.%%Z
