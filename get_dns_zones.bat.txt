@@ -1,0 +1,18 @@
+@echo off
+rem
+rem Get information about DNS zones on this server
+rem
+set RINDEX="%RANDOM%"
+set REGFILE="%RINDEX%_%COMMPUTERNAME%_dns.reg"
+set SETTINGFILE="%RINDEX%_%COMMPUTERNAME%_DnsSettings.txt"
+set INFOFILE="%RINDEX%_%COMMPUTERNAME%_dnsinfo.txt"
+set ZONELISTFILE="%RINDEX%_%COMMPUTERNAME%_zonelist.txt"
+set ZONEFILEPREFIX="%RINDEX%__db"
+reg export "HKLM\Software\Microsoft\Windows NT\CurrentVersion\DNS Server\Zones" %REGFILE%
+dnscmd /exportsettings
+dnscmd /info > %INFOFILE%
+dnscmd /enumzones > %ZONELISTFILE%
+for /F "skip=5" %%Z in ('dnscmd /enumzones /primary') DO dnscmd /ZoneExport %%Z %ZONEFILEPREFIX%.%%Z
+copy %SYSTEMROOT%\system32\dns\%ZONEFILEPREFIX%.* .
+copy %systemroot%\system32\dns\DnsSettings.txt .\%SETTINGSFILE%
+
