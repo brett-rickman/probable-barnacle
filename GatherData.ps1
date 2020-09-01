@@ -12,7 +12,7 @@ echo $serverver > $server_info
 if (Get-WindowsFeature DNS | where {$_.Installed -eq 1}) {
     echo "DNS Installed."
     reg export "HKLM\Software\Microsoft\Windows NT\CurrentVersion\DNS Server\Zones" $dns_reg_file
-    if ($psinfo.Version -eq "4.0") {
+    if ([System.Version]$psinfo.Version -ge [System.Version]"4.0") {
         $z = Get-DnsServerZone
         $z | Export-Csv -Path $dns_csv_file -NoTypeInformation
         $z.ZoneName | select-string -pattern '^((0|127|255).in-addr.arpa|TrustAnchors)' -NotMatch | foreach  {
@@ -38,7 +38,7 @@ if (Get-WindowsFeature DNS | where {$_.Installed -eq 1}) {
     }
 if (Get-WindowsFeature DHCP | where {$_.Installed -eq 1}) {
     echo "DHCP Installed."
-    if ($psinfo.Version -eq "4.0") {
+    if ([System.Version]$psinfo.Version -ge [System.Version]"4.0") {
         Export-DhcpServer -File $dhcp_export_xml
         }
     netsh dhcp server dump > $dhcp_export_file
