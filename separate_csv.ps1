@@ -4,24 +4,36 @@ param (
     [string]$WorkDir = "./work"
     )
 
-$obj_types = @()
-foreach ($line in get-content -path $Exportfile) {
-    $rec = $line | convertfrom-csv -header @(0 .. 0)
-    $obj_type = $rec.0
-    if ($rec.0 -match '^(H|h)eader-') {
+$CsvIn = import-csv $ExportFile -Header @(0 .. 100) 
+$obj_properties = @{}
+$sep_csv = @{}
+foreach ($row in $CsvIn) {
+    $obj_type = $row.0
+    if ($obj_type -match '(H|h)eader-') { # found a header row
+        $hdrs = $row.psobject.properties.Value | where-object { $_; } 
         $obj_type = $obj_type.Substring(7)
-        $obj_types += $obj_type
-        $last_obj_type = $obj_type 
-        }
-    if ($obj_types.Contains($obj_type)) {
-            $out_file = $WorkDir + "/" + $obj_type + ".csv"
+        $obj_properties[$obj_type] = $hdrs
+        $sep_csv[$obj_type] = [System.Collections.ArrayList]@()
         } else {
-            $line
-            $out_file = $WorkDir + "/" + $last_obj_type + ".csv"
-        }
-    $line | out-file -filepath $out_file -encoding utf8 -append 
-     
-    
+        $h = $obj_properties[$obj_type]
+        $r = $row.psobject.properties.Value 
+        $this_dat = [ordered]@{}
+        for ($i=0; $i -le $h.count - 1; $i++) {
+            $k = $h[$i]
+            $v = $r[$i] 
+            $this_dat[$k] = $v 
+            }
+        $this_obj = New-Object -TypeName psobject -Property $this_dat
+        $sep_csv[$obj_type].Add($this_obj) > $null 
+       }
     }
-    write-output "Found object types ===="
-    $obj_types
+ 
+foreach ($found_obj_type in $sep_csv.keys) {
+    $out_file = $WorkDir + "/sep_" + $found_obj_type + ".csv" 
+    $sep_csv[$found_obj_type] | foreach-object { $_; } | export-csv -Path $out_file -Encoding ASCII -NoTypeInformation
+    #export-csv -InputObject $sep_csv[$found_obj_type] -Path $out_file -Encoding ASCII -NoTypeInformation
+    }
+   
+
+   
+
